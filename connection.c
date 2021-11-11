@@ -300,3 +300,4 @@ void handle_request(int fd) {
         request_serve_dynamic(fd, filename, cgiargs);
     }
 }
+

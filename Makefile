@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -pthread
 
 EXECUTABLES = web_server
 
