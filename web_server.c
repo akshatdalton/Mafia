@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         // accept blocks untill an incoming connection arrives
         // it returns a "file descriptor" to the connection.
         printf("waiting for a connection on port %d\n", SERVER_PORT);
-        if ((conn_fd = accept(listen_fd, (SA *) &client_addr, (SA *) &addr_len)) < 0) {
+        if ((conn_fd = accept(listen_fd, (SA *) &client_addr, (socklen_t *) &addr_len)) < 0) {
             err_n_die("accept error.");
         }
         printf("Connected!\n");
