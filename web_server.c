@@ -6,13 +6,26 @@
 #define THREAD_POOL_SIZE 20
 
 pthread_t thread_pool[THREAD_POOL_SIZE];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+pthread_cond_t condition_v = PTHREAD_COND_INITIALIZER;  
 
 //handle multiple threads
 void *thread_function(void *arg){
     while (1){
+        pthread_mutex_lock(&mutex) ; 
         int *pclient = dequeue();
-        if (pclient != NULL)
-            handle_request(*pclient);
+        if (pclient == NULL ){
+            pthread_cond_wait(&condition_v  , &mutex) ; 
+            pclient = dequeue () ; 
+        }
+        pthread_mutex_unlock(&mutex ) ; 
+        if (pclient != NULL){
+            int conn_fd = *pclient ; 
+            free(pclient)   ; 
+            
+            handle_request(conn_fd);
+            close(conn_fd);
+        }
     }
 }
 
@@ -36,14 +49,18 @@ int main(int argc, char *argv[]) {
         // accept blocks untill an incoming connection arrives
         // it returns a "file descriptor" to the connection.
         printf("waiting for a connection on port %d\n", SERVER_PORT);
-        fflush(stdout);
         if ((conn_fd = accept(listen_fd, (SA *) &client_addr, (SA *) &addr_len)) < 0) {
             err_n_die("accept error.");
         }
         printf("Connected!\n");
+        fflush(stdout);
+
         int *pclient = malloc(sizeof(int));
         *pclient = conn_fd;
+        pthread_mutex_lock(&mutex) ; 
         enqueue(pclient);
-        close(conn_fd);
+        pthread_cond_signal(&condition_v ) ; 
+        pthread_mutex_unlock(&mutex); 
+        
     }
 }

@@ -247,7 +247,6 @@ void request_serve_static(int fd, char *filename, int filesize) {
     if (write(fd, buf, strlen(buf)) < 0) {
         err_n_die("write error.");
     }
-
     //  Writes out to the client socket the memory-mapped file
     if (write(fd, srcp, filesize) < 0) {
         err_n_die("write error.");
@@ -267,7 +266,7 @@ void handle_request(int fd) {
 
     sscanf(buf, "%s %s %s", method, uri, version);
     printf("method:%s uri:%s version:%s\n", method, uri, version);
-
+    fflush(stdout) ; 
     if (strcasecmp(method, "GET")) {
         request_error(fd, method, "501", "Not Implemented", "server does not implement this method");
         return;
