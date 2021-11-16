@@ -96,7 +96,7 @@ int open_client_connection(char *hostname, int port)
     server_addr.sin_port = htons(port);
 
     // Establish a connection with the server
-    if (connect(client_fd, (struct sockaddr_in *)&server_addr, sizeof(server_addr)) < 0)
+    if (connect(client_fd, (const struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
         return -1;
     return client_fd;
 }
