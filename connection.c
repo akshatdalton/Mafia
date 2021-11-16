@@ -79,8 +79,7 @@ int open_server_connection() {
     return listen_fd;
 }
 
-int open_client_connection(char *hostname, int port)
-{
+int open_client_connection(char *hostname, int port) {
     int client_fd;
     struct hostent *hp;
     struct sockaddr_in server_addr;
@@ -89,10 +88,10 @@ int open_client_connection(char *hostname, int port)
         return -1;
 
     if ((hp = gethostbyname(hostname)) == NULL)
-        return -2; 
+        return -2;
     bzero((char *)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    bcopy((char *)hp->h_addr,(char *)&server_addr.sin_addr.s_addr, hp->h_length);
+    bcopy((char *)hp->h_addr, (char *)&server_addr.sin_addr.s_addr, hp->h_length);
     server_addr.sin_port = htons(port);
 
     // Establish a connection with the server
@@ -159,44 +158,69 @@ void request_read_headers(int fd) {
 }
 
 //
-// Return 1 if static, 0 if dynamic content
-// Calculates filename (and cgiargs, for dynamic) from uri
+// returns 1 if reader, 2 if writer else -1.
 //
-int request_parse_uri(char *uri, char *filename, char *cgiargs) {
+int request_parse_uri(char *uri, int *line_num, char *content) {
     char *ptr;
+    int index = 0;
+    char line[MAXLINE];
 
-    if (!strstr(uri, "cgi")) {
-        // static
-        strcpy(cgiargs, "");
-        sprintf(filename, ".%s", uri);
-        if (uri[strlen(uri) - 1] == '/') {
-            strcat(filename, "index.html");
+    if (strstr(uri, "reader") != NULL) {
+        // reader
+        if ((ptr = strstr(uri, "line_num")) == NULL) {
+            return -1;
         }
+        ptr += strlen("line_num") + 1;
+        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9') {
+            line[index++] = (*ptr);
+            ptr++;
+        }
+        line[index] = '\0';
+        *line_num = atoi(line);
+
         return 1;
-    } else {
-        // dynamic
-        ptr = index(uri, '?');
-        if (ptr) {
-            strcpy(cgiargs, ptr + 1);
-            *ptr = '\0';
-        } else {
-            strcpy(cgiargs, "");
-        }
-        sprintf(filename, ".%s", uri);
-        return 0;
     }
+
+    if (strstr(uri, "writer") != NULL) {
+        // writer
+        if ((ptr = strstr(uri, "line_num")) == NULL) {
+            return -1;
+        }
+        ptr += strlen("line_num") + 1;
+        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9') {
+            line[index++] = (*ptr);
+            ptr++;
+        }
+        line[index] = '\0';
+        *line_num = atoi(line);
+
+        if ((ptr = strstr(uri, "content")) == NULL) {
+            return -1;
+        }
+        ptr += strlen("content") + 1;
+        index = 0;
+        while (*ptr != '\0') {
+            if (*ptr != '+') {
+                content[index++] = *ptr;
+            } else {
+                content[index++] = ' ';
+            }
+            ptr++;
+        }
+        content[index] = '\0';
+
+        return 2;
+    }
+
+    return -1;
 }
 
 //
-// Fills in the filetype given the filename
+// Find the file type
 //
 void request_get_filetype(char *filename, char *filetype) {
     if (strstr(filename, ".html"))
         strcpy(filetype, "text/html");
-    else if (strstr(filename, ".gif"))
-        strcpy(filetype, "image/gif");
-    else if (strstr(filename, ".jpg"))
-        strcpy(filetype, "image/jpeg");
     else
         strcpy(filetype, "text/plain");
 }
@@ -288,7 +312,7 @@ void handle_request(int fd) {
 
     sscanf(buf, "%s %s %s", method, uri, version);
     printf("method:%s uri:%s version:%s\n", method, uri, version);
-    fflush(stdout) ; 
+    fflush(stdout);
     if (strcasecmp(method, "GET")) {
         request_error(fd, method, "501", "Not Implemented", "server does not implement this method");
         return;
@@ -297,28 +321,19 @@ void handle_request(int fd) {
     // Start by reading headers.
     request_read_headers(fd);
 
-    // Check if the requested file is present or not.
-    struct stat sbuf;
-    char filename[MAXLINE], cgiargs[MAXLINE];
-    int is_static = request_parse_uri(uri, filename, cgiargs);
+    int line_num = -1;
+    char content[MAXLINE];
+    int is_reader = request_parse_uri(uri, &line_num, content);
 
-    if (stat(filename, &sbuf) < 0) {
-        request_error(fd, filename, "404", "Not found", "server could not find this file");
+    if (is_reader == -1 || line_num == -1) {
+        request_error(fd, "path", "404", "Not Found", "server could not find the requested path");
         return;
     }
 
-    if (is_static) {
-        if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode)) {
-            request_error(fd, filename, "403", "Forbidden", "server could not read this file");
-            return;
-        }
-        request_serve_static(fd, filename, sbuf.st_size);
+    if (is_reader) {
+        // request_serve_reader(fd, line_num);
     } else {
-        if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode)) {
-            request_error(fd, filename, "403", "Forbidden", "server could not run this CGI program");
-            return;
-        }
-        request_serve_dynamic(fd, filename, cgiargs);
+        // writer
+        // request_serve_writer(fd, line_num, content);
     }
 }
-
