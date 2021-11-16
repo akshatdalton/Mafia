@@ -255,6 +255,43 @@ void request_serve_static(int fd, char *filename, int filesize) {
         err_n_die("munmap error.");
     }
 }
+/* Function to read the data present at the given line number 
+ * and send the data as response */
+void read_line_file(int fd , int line_number){
+    // semaphore to be added here.  
+    FILE *file = fopen("data.txt" ,"r") ; 
+    if (file ==NULL){
+        err_n_die("Unable to open the file"); 
+    }
+    char buf[MAXLINE], header[MAXLINE]; 
+
+    int line =1 , found=0 ;
+    
+    while(fgets(buf , MAXLINE , file )){
+        if (line == line_number){
+            found =1 ;
+            break ;
+        }
+        line++ ; 
+    }
+    if(found ){
+        sprintf(header,
+            ""
+            "HTTP/1.0 200 OK\r\n"
+            "Server: IIITH WebServer\r\n"
+            "Content-Length: %d\r\n"
+            "Content-Type: \r\n\r\n",
+            strlen(buf));
+        if (write(fd, header , strlen(header))< 0){
+            err_n_die("write error"); 
+        }
+        if (write(fd, buf , strlen(buf))< 0){
+            err_n_die("write error") ; 
+        }
+    }else {
+        err_n_die("Unable to read this line"); 
+    }
+}
 
 // handle a request
 void handle_request(int fd) {
