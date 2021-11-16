@@ -79,6 +79,28 @@ int open_server_connection() {
     return listen_fd;
 }
 
+int open_client_connection(char *hostname, int port)
+{
+    int client_fd;
+    struct hostent *hp;
+    struct sockaddr_in server_addr;
+
+    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        return -1;
+
+    if ((hp = gethostbyname(hostname)) == NULL)
+        return -2; 
+    bzero((char *)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    bcopy((char *)hp->h_addr,(char *)&server_addr.sin_addr.s_addr, hp->h_length);
+    server_addr.sin_port = htons(port);
+
+    // Establish a connection with the server
+    if (connect(client_fd, (struct sockaddr_in *)&server_addr, sizeof(server_addr)) < 0)
+        return -1;
+    return client_fd;
+}
+
 // request error
 void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg) {
     char buf[MAXLINE], body[MAXLINE];

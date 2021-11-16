@@ -29,10 +29,12 @@ void *thread_function(void *arg){
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int listen_fd, conn_fd;
 
-    if ((listen_fd = open_server_connection()) < 0) {
+    if ((listen_fd = open_server_connection()) < 0)
+    {
         err_n_die("open_server_connection error.");
     }
 
@@ -64,3 +66,4 @@ int main(int argc, char *argv[]) {
         
     }
 }
+
