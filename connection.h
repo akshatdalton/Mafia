@@ -31,5 +31,6 @@ void err_n_die(const char *fmt, ...);
 char *bin2hex(const unsigned char *input, size_t len);
 int open_server_connection();
 void handle_request(int fd);
+void *thread_function(void *arg);
 
 #endif
