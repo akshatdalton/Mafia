@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 // for variadic function
 #include <errno.h>
