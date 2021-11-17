@@ -369,6 +369,7 @@ void handle_request(int fd) {
 
     if (is_reader) {
         // request_serve_reader(fd, line_num);
+        read_line_file(fd , line_num); 
     } else {
         // writer
         // request_serve_writer(fd, line_num, content);
