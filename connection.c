@@ -1,4 +1,9 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "connection.h"
+
 
 void err_n_die(const char *fmt, ...) {
     int errno_save;
@@ -325,7 +330,7 @@ void read_line_file(int fd , int line_number){
             ""
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n"
-            "Content-Length: %d\r\n"
+            "Content-Length: %ld\r\n"
             "Content-Type: \r\n\r\n",
             strlen(buf));
         if (write(fd, header , strlen(header))< 0){
@@ -337,6 +342,55 @@ void read_line_file(int fd , int line_number){
     }else {
         err_n_die("Unable to read this line"); 
     }
+}
+
+void edit_files(int fd, int lno, char* newln)
+{
+    printf("I'm in writer\n");
+    const char *filename = "data.txt";
+    char temp[] = "temp.txt";
+    char str[MAXLINE];
+    char header[MAXLINE];
+    newln = strcat(newln,"\n");
+    int found = 0;
+    FILE *fptr1, *fptr2;
+    int linectr = 0;
+    fptr1 = fopen(filename,"r");
+    fptr2 = fopen(temp,"w");
+    while (!feof(fptr1))
+    {
+        strcpy(str,"\0");
+        fgets(str,MAXLINE,fptr1);
+        if (!feof(fptr1))
+        {
+            linectr++;
+            if (linectr != lno)
+                fprintf(fptr2,"%s",str);
+            else
+            {
+                found = 1;
+                printf("Written!\n");
+                fprintf(fptr2,"%s",newln);
+            }
+         }
+    }
+    if(found ){
+        sprintf(header,
+            ""
+            "HTTP/1.0 200 OK\r\n"
+            "Server: IIITH WebServer\r\n"
+            "Content-Length: 0\r\n"
+            "Content-Type: \r\n\r\n");
+        if (write(fd, header , strlen(header))< 0){
+            err_n_die("write error"); 
+        }
+    }else {
+        err_n_die("Unable to read this line"); 
+    }
+    fclose(fptr1);
+    fclose(fptr2);
+    remove(filename);
+    rename(temp,filename);
 }
 
 // handle a request
@@ -367,11 +421,11 @@ void handle_request(int fd) {
         return;
     }
 
-    if (is_reader) {
+    if (is_reader==1) {
         // request_serve_reader(fd, line_num);
         read_line_file(fd , line_num); 
     } else {
         // writer
-        // request_serve_writer(fd, line_num, content);
+        edit_files(fd, line_num, content);
     }
 }
