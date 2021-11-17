@@ -26,7 +26,10 @@
 #define SERVER_PORT 18000
 
 #define MAXLINE 8192
+#define MAXSIZE 50
 #define SA struct sockaddr
+
+sem_t wrt[MAXSIZE],mutex1;
 
 void err_n_die(const char *fmt, ...);
 char *bin2hex(const unsigned char *input, size_t len);

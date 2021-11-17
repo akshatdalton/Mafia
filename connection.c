@@ -4,6 +4,7 @@
 
 #include "connection.h"
 
+int r_count = 0;
 
 void err_n_die(const char *fmt, ...) {
     int errno_save;
@@ -379,10 +380,14 @@ void edit_files(int fd, int lno, char* newln)
             ""
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n"
-            "Content-Length: 0\r\n"
-            "Content-Type: \r\n\r\n");
+            "Content-Length: %ld\r\n"
+            "Content-Type: \r\n\r\n",
+            strlen(newln));
         if (write(fd, header , strlen(header))< 0){
             err_n_die("write error"); 
+        }
+    if (write(fd, newln , strlen(newln))< 0){
+            err_n_die("write error") ; 
         }
     }else {
         err_n_die("Unable to read this line"); 
@@ -423,9 +428,24 @@ void handle_request(int fd) {
 
     if (is_reader==1) {
         // request_serve_reader(fd, line_num);
+        sem_wait(&mutex1);
+        r_count++;
+        if (r_count==1)
+            sem_wait(wrt+line_num-1);
+        sem_post(&mutex1);
         read_line_file(fd , line_num); 
+        sem_wait(&mutex1);
+        r_count--;
+        if (r_count==0)
+        {
+            sem_post(wrt+line_num-1);
+        }
+        sem_post(&mutex1);
+        
     } else {
         // writer
+        sem_wait(wrt+line_num-1);
         edit_files(fd, line_num, content);
+        sem_post(wrt+line_num-1);
     }
 }
