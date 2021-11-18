@@ -396,7 +396,7 @@ void read_line_file(int fd, int line_number)
                 "HTTP/1.0 200 OK\r\n"
                 "Server: IIITH WebServer\r\n"
                 "Content-Length: %ld\r\n"
-                "Content-Type: \r\n\r\n",
+                "Content-Type: text/plain\r\n\r\n",
                 strlen(buf));
         if (write(fd, header, strlen(header)) < 0)
         {
@@ -472,31 +472,37 @@ void edit_files(int fd, int lno, char *newln)
 
 void read_all(int fd)
 {
-    FILE *file = fopen("data.txt", "r");
-    if (file == NULL)
+    int srcfd;
+    struct stat st;
+    char *srcp, buf[MAXLINE];
+    stat("data.txt", &st);
+    if ((srcfd = open("data.txt", O_RDONLY, 0)) < 0)
     {
-        err_n_die("Unable to open the file");
+        err_n_die("open error.");
     }
-    char buf[MAXLINE], header[MAXLINE];
-    sprintf(header,
+    if ((srcp = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, srcfd, 0)) < 0)
+    {
+        err_n_die("mmap error.");
+    }
+    sprintf(buf,
             ""
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n"
             "Content-Length: %ld\r\n"
-            "Content-Type: \r\n\r\n",
-            strlen(buf));
-    if (write(fd, header, strlen(header)) < 0)
-    {
-        err_n_die("write error");
-    }
-    
-
-    while (fgets(buf, MAXLINE, file))
-    {
-        if (write(fd, buf, strlen(buf)) < 0)
+            "Content-Type: text/plain\r\n\r\n",
+            st.st_size );
+    if (write(fd, buf, strlen(buf)) < 0)
         {
             err_n_die("write error");
         }
+    
+    if (write(fd, srcp, st.st_size) < 0)
+    {
+        err_n_die("write error.");
+    }
+    if (munmap(srcp, st.st_size) < 0)
+    {
+        err_n_die("munmap error.");
     }
 }
 
