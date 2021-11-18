@@ -6,7 +6,8 @@
 
 int r_count = 0;
 
-void err_n_die(const char *fmt, ...) {
+void err_n_die(const char *fmt, ...)
+{
     int errno_save;
     va_list ap;
 
@@ -20,7 +21,8 @@ void err_n_die(const char *fmt, ...) {
     fflush(stdout);
 
     // print our error message is errno was set.
-    if (errno_save != 0) {
+    if (errno_save != 0)
+    {
         fprintf(stdout, "(errno = %d) : %s\n", errno_save, strerror(errno_save));
         fprintf(stdout, "\n");
         fflush(stdout);
@@ -31,38 +33,47 @@ void err_n_die(const char *fmt, ...) {
     exit(1);
 }
 
-ssize_t readline(int fd, void *buf, size_t maxlen) {
+ssize_t readline(int fd, void *buf, size_t maxlen)
+{
     char c;
     char *bufp = buf;
     int n;
-    for (n = 0; n < maxlen - 1; n++) {  // leave room at end for '\0'
+    for (n = 0; n < maxlen - 1; n++)
+    { // leave room at end for '\0'
         int rc;
-        if ((rc = read(fd, &c, 1)) == 1) {
+        if ((rc = read(fd, &c, 1)) == 1)
+        {
             *bufp++ = c;
             if (c == '\n')
                 break;
-        } else if (rc == 0) {
+        }
+        else if (rc == 0)
+        {
             if (n == 1)
                 return 0; /* EOF, no data read */
             else
                 break; /* EOF, some data was read */
-        } else
+        }
+        else
             return -1; /* error */
     }
     *bufp = '\0';
     return n;
 }
 
-int open_server_connection() {
+int open_server_connection()
+{
     // Create a socket descriptor
     int listen_fd;
-    if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((listen_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         return -1;
     }
 
     // Eliminates "Address already in use" error from bind
     int opt_val = 1;
-    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt_val, sizeof(int)) < 0) {
+    if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&opt_val, sizeof(int)) < 0)
+    {
         return -2;
     }
 
@@ -73,11 +84,13 @@ int open_server_connection() {
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_addr.sin_port = htons(SERVER_PORT); /* server port */
 
-    if ((bind(listen_fd, (SA *)&server_addr, sizeof(server_addr))) < 0) {
+    if ((bind(listen_fd, (SA *)&server_addr, sizeof(server_addr))) < 0)
+    {
         return -3;
     }
 
-    if ((listen(listen_fd, 1024)) < 0) {
+    if ((listen(listen_fd, 1024)) < 0)
+    {
         // accepts connection requests
         return -4;
     }
@@ -85,7 +98,8 @@ int open_server_connection() {
     return listen_fd;
 }
 
-int open_client_connection(char *hostname, int port) {
+int open_client_connection(char *hostname, int port)
+{
     int client_fd;
     struct hostent *hp;
     struct sockaddr_in server_addr;
@@ -107,7 +121,8 @@ int open_client_connection(char *hostname, int port) {
 }
 
 // request error
-void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg) {
+void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg)
+{
     char buf[MAXLINE], body[MAXLINE];
 
     // Create the body of error message first (have to know its length for header)
@@ -126,22 +141,26 @@ void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *long
 
     // Write out the header information for this response
     sprintf(buf, "HTTP/1.0 %s %s\r\n", errnum, shortmsg);
-    if (write(fd, buf, strlen(buf)) < 0) {
+    if (write(fd, buf, strlen(buf)) < 0)
+    {
         err_n_die("write error.");
     }
 
     sprintf(buf, "Content-Type: text/html\r\n");
-    if (write(fd, buf, strlen(buf)) < 0) {
+    if (write(fd, buf, strlen(buf)) < 0)
+    {
         err_n_die("write error.");
     }
 
     sprintf(buf, "Content-Length: %lu\r\n\r\n", strlen(body));
-    if (write(fd, buf, strlen(buf)) < 0) {
+    if (write(fd, buf, strlen(buf)) < 0)
+    {
         err_n_die("write error.");
     }
 
     // Write out the body last
-    if (write(fd, body, strlen(body)) < 0) {
+    if (write(fd, body, strlen(body)) < 0)
+    {
         err_n_die("write error.");
     }
 }
@@ -149,14 +168,18 @@ void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *long
 //
 // Reads and discards everything up to an empty text line
 //
-void request_read_headers(int fd) {
+void request_read_headers(int fd)
+{
     char buf[MAXLINE];
 
-    if (readline(fd, buf, MAXLINE) < 0) {
+    if (readline(fd, buf, MAXLINE) < 0)
+    {
         err_n_die("readline error.");
     }
-    while (strcmp(buf, "\r\n")) {
-        if (readline(fd, buf, MAXLINE) < 0) {
+    while (strcmp(buf, "\r\n"))
+    {
+        if (readline(fd, buf, MAXLINE) < 0)
+        {
             err_n_die("readline error.");
         }
     }
@@ -166,23 +189,28 @@ void request_read_headers(int fd) {
 //
 // returns 1 if reader, 2 if writer else -1.
 //
-int request_parse_uri(char *uri, int *line_num, char *content) {
+int request_parse_uri(char *uri, int *line_num, char *content)
+{
     char *ptr;
     int index = 0;
     char line[MAXLINE];
 
-    if (strlen(uri) == 1 && uri[0] == '/') {
+    if (strlen(uri) == 1 && uri[0] == '/')
+    {
         // root
         return 0;
     }
 
-    if (strstr(uri, "reader") != NULL) {
+    if (strstr(uri, "reader") != NULL)
+    {
         // reader
-        if ((ptr = strstr(uri, "line_num")) == NULL) {
+        if ((ptr = strstr(uri, "line_num")) == NULL)
+        {
             return -1;
         }
         ptr += strlen("line_num") + 1;
-        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9') {
+        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9')
+        {
             line[index++] = (*ptr);
             ptr++;
         }
@@ -192,28 +220,36 @@ int request_parse_uri(char *uri, int *line_num, char *content) {
         return 1;
     }
 
-    if (strstr(uri, "writer") != NULL) {
+    if (strstr(uri, "writer") != NULL)
+    {
         // writer
-        if ((ptr = strstr(uri, "line_num")) == NULL) {
+        if ((ptr = strstr(uri, "line_num")) == NULL)
+        {
             return -1;
         }
         ptr += strlen("line_num") + 1;
-        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9') {
+        while (*ptr != '\0' && '0' <= *ptr && *ptr <= '9')
+        {
             line[index++] = (*ptr);
             ptr++;
         }
         line[index] = '\0';
         *line_num = atoi(line);
 
-        if ((ptr = strstr(uri, "content")) == NULL) {
+        if ((ptr = strstr(uri, "content")) == NULL)
+        {
             return -1;
         }
         ptr += strlen("content") + 1;
         index = 0;
-        while (*ptr != '\0') {
-            if (*ptr != '+') {
+        while (*ptr != '\0')
+        {
+            if (*ptr != '+')
+            {
                 content[index++] = *ptr;
-            } else {
+            }
+            else
+            {
                 content[index++] = ' ';
             }
             ptr++;
@@ -229,14 +265,16 @@ int request_parse_uri(char *uri, int *line_num, char *content) {
 //
 // Find the file type
 //
-void request_get_filetype(char *filename, char *filetype) {
+void request_get_filetype(char *filename, char *filetype)
+{
     if (strstr(filename, ".html"))
         strcpy(filetype, "text/html");
     else
         strcpy(filetype, "text/plain");
 }
 
-void request_serve_dynamic(int fd, char *filename, char *cgiargs) {
+void request_serve_dynamic(int fd, char *filename, char *cgiargs)
+{
     char buf[MAXLINE], *argv[] = {NULL};
 
     // The server does only a little bit of the header.
@@ -246,49 +284,62 @@ void request_serve_dynamic(int fd, char *filename, char *cgiargs) {
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n");
 
-    if (write(fd, buf, strlen(buf)) < 0) {
+    if (write(fd, buf, strlen(buf)) < 0)
+    {
         err_n_die("write error.");
     }
 
     pid_t pid = fork();
-    if (pid < 0) {
+    if (pid < 0)
+    {
         err_n_die("fork error.");
     }
 
-    if (pid == 0) {                                    // child
-        if (setenv("QUERY_STRING", cgiargs, 1) < 0) {  // args to cgi go here
+    if (pid == 0)
+    { // child
+        if (setenv("QUERY_STRING", cgiargs, 1) < 0)
+        { // args to cgi go here
             err_n_die("setenv error.");
         }
-        if (dup2(fd, STDOUT_FILENO) < 0) {  // make cgi writes go to socket (not screen)
+        if (dup2(fd, STDOUT_FILENO) < 0)
+        { // make cgi writes go to socket (not screen)
             err_n_die("dup2 error.");
         }
-        extern char **environ;  // defined by libc
-        if (execve(filename, argv, environ) < 0) {
+        extern char **environ; // defined by libc
+        if (execve(filename, argv, environ) < 0)
+        {
             err_n_die("execve error.");
         }
-    } else {
-        if (wait(NULL) < 0) {
+    }
+    else
+    {
+        if (wait(NULL) < 0)
+        {
             err_n_die("wait error.");
         }
     }
 }
 
-void request_serve_static(int fd, char *filename, int filesize) {
+void request_serve_static(int fd, char *filename, int filesize)
+{
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXLINE];
 
     request_get_filetype(filename, filetype);
-    if ((srcfd = open(filename, O_RDONLY, 0)) < 0) {
+    if ((srcfd = open(filename, O_RDONLY, 0)) < 0)
+    {
         err_n_die("open error.");
     }
 
     // Rather than call read() to read the file into memory,
     // which would require that we allocate a buffer, we memory-map the file
-    if ((srcp = mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0)) < 0) {
+    if ((srcp = mmap(0, filesize, PROT_READ, MAP_PRIVATE, srcfd, 0)) < 0)
+    {
         err_n_die("mmap error.");
     }
 
-    if (close(srcfd) < 0) {
+    if (close(srcfd) < 0)
+    {
         err_n_die("close error.");
     }
 
@@ -301,119 +352,169 @@ void request_serve_static(int fd, char *filename, int filesize) {
             "Content-Type: %s\r\n\r\n",
             filesize, filetype);
 
-    if (write(fd, buf, strlen(buf)) < 0) {
+    if (write(fd, buf, strlen(buf)) < 0)
+    {
         err_n_die("write error.");
     }
     //  Writes out to the client socket the memory-mapped file
-    if (write(fd, srcp, filesize) < 0) {
+    if (write(fd, srcp, filesize) < 0)
+    {
         err_n_die("write error.");
     }
-    if (munmap(srcp, filesize) < 0) {
+    if (munmap(srcp, filesize) < 0)
+    {
         err_n_die("munmap error.");
     }
 }
-/* Function to read the data present at the given line number 
+/* Function to read the data present at the given line number
  * and send the data as response */
-void read_line_file(int fd , int line_number){
-    // semaphore to be added here.  
-    FILE *file = fopen("data.txt" ,"r") ; 
-    if (file ==NULL){
-        err_n_die("Unable to open the file"); 
+void read_line_file(int fd, int line_number)
+{
+    // semaphore to be added here.
+    FILE *file = fopen("data.txt", "r");
+    if (file == NULL)
+    {
+        err_n_die("Unable to open the file");
     }
-    char buf[MAXLINE], header[MAXLINE]; 
+    char buf[MAXLINE], header[MAXLINE];
 
-    int line =1 , found=0 ;
-    
-    while(fgets(buf , MAXLINE , file )){
-        if (line == line_number){
-            found =1 ;
-            break ;
+    int line = 1, found = 0;
+
+    while (fgets(buf, MAXLINE, file))
+    {
+        if (line == line_number)
+        {
+            found = 1;
+            break;
         }
-        line++ ; 
+        line++;
     }
-    if(found ){
+    if (found)
+    {
         sprintf(header,
+                ""
+                "HTTP/1.0 200 OK\r\n"
+                "Server: IIITH WebServer\r\n"
+                "Content-Length: %ld\r\n"
+                "Content-Type: \r\n\r\n",
+                strlen(buf));
+        if (write(fd, header, strlen(header)) < 0)
+        {
+            err_n_die("write error");
+        }
+        if (write(fd, buf, strlen(buf)) < 0)
+        {
+            err_n_die("write error");
+        }
+    }
+    else
+    {
+        err_n_die("Unable to read this line");
+    }
+}
+
+void edit_files(int fd, int lno, char *newln)
+{
+    const char *filename = "data.txt";
+    char temp[] = "temp.txt";
+    char str[MAXLINE];
+    char header[MAXLINE];
+    newln = strcat(newln, "\n");
+    int found = 0;
+    FILE *fptr1, *fptr2;
+    int linectr = 0;
+    fptr1 = fopen(filename, "r");
+    fptr2 = fopen(temp, "w");
+    while (!feof(fptr1))
+    {
+        strcpy(str, "\0");
+        fgets(str, MAXLINE, fptr1);
+        if (!feof(fptr1))
+        {
+            linectr++;
+            if (linectr != lno)
+                fprintf(fptr2, "%s", str);
+            else
+            {
+                found = 1;
+                printf("Written!\n");
+                fprintf(fptr2, "%s", newln);
+            }
+        }
+    }
+    if (found)
+    {
+        sprintf(header,
+                ""
+                "HTTP/1.0 200 OK\r\n"
+                "Server: IIITH WebServer\r\n"
+                "Content-Length: %ld\r\n"
+                "Content-Type: \r\n\r\n",
+                strlen(newln));
+        if (write(fd, header, strlen(header)) < 0)
+        {
+            err_n_die("write error");
+        }
+        if (write(fd, newln, strlen(newln)) < 0)
+        {
+            err_n_die("write error");
+        }
+    }
+    else
+    {
+        err_n_die("Unable to read this line");
+    }
+    fclose(fptr1);
+    fclose(fptr2);
+    remove(filename);
+    rename(temp, filename);
+}
+
+void read_all(int fd)
+{
+    FILE *file = fopen("data.txt", "r");
+    if (file == NULL)
+    {
+        err_n_die("Unable to open the file");
+    }
+    char buf[MAXLINE], header[MAXLINE];
+    sprintf(header,
             ""
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n"
             "Content-Length: %ld\r\n"
             "Content-Type: \r\n\r\n",
             strlen(buf));
-        if (write(fd, header , strlen(header))< 0){
-            err_n_die("write error"); 
-        }
-        if (write(fd, buf , strlen(buf))< 0){
-            err_n_die("write error") ; 
-        }
-    }else {
-        err_n_die("Unable to read this line"); 
-    }
-}
-
-void edit_files(int fd, int lno, char* newln)
-{
-    const char *filename = "data.txt";
-    char temp[] = "temp.txt";
-    char str[MAXLINE];
-    char header[MAXLINE];
-    newln = strcat(newln,"\n");
-    int found = 0;
-    FILE *fptr1, *fptr2;
-    int linectr = 0;
-    fptr1 = fopen(filename,"r");
-    fptr2 = fopen(temp,"w");
-    while (!feof(fptr1))
+    if (write(fd, header, strlen(header)) < 0)
     {
-        strcpy(str,"\0");
-        fgets(str,MAXLINE,fptr1);
-        if (!feof(fptr1))
+        err_n_die("write error");
+    }
+    
+
+    while (fgets(buf, MAXLINE, file))
+    {
+        if (write(fd, buf, strlen(buf)) < 0)
         {
-            linectr++;
-            if (linectr != lno)
-                fprintf(fptr2,"%s",str);
-            else
-            {
-                found = 1;
-                printf("Written!\n");
-                fprintf(fptr2,"%s",newln);
-            }
-         }
-    }
-    if(found ){
-        sprintf(header,
-            ""
-            "HTTP/1.0 200 OK\r\n"
-            "Server: IIITH WebServer\r\n"
-            "Content-Length: %ld\r\n"
-            "Content-Type: \r\n\r\n",
-            strlen(newln));
-        if (write(fd, header , strlen(header))< 0){
-            err_n_die("write error"); 
+            err_n_die("write error");
         }
-    if (write(fd, newln , strlen(newln))< 0){
-            err_n_die("write error") ; 
-        }
-    }else {
-        err_n_die("Unable to read this line"); 
     }
-    fclose(fptr1);
-    fclose(fptr2);
-    remove(filename);
-    rename(temp,filename);
 }
 
 // handle a request
-void handle_request(int fd) {
+void handle_request(int fd)
+{
     char buf[MAXLINE], method[MAXLINE], uri[MAXLINE], version[MAXLINE];
 
-    if (readline(fd, buf, MAXLINE) < 0) {
+    if (readline(fd, buf, MAXLINE) < 0)
+    {
         err_n_die("readline error.");
     }
 
     sscanf(buf, "%s %s %s", method, uri, version);
     printf("method:%s uri:%s version:%s\n", method, uri, version);
     fflush(stdout);
-    if (strcasecmp(method, "GET")) {
+    if (strcasecmp(method, "GET"))
+    {
         request_error(fd, method, "501", "Not Implemented", "server does not implement this method");
         return;
     }
@@ -425,37 +526,41 @@ void handle_request(int fd) {
     char content[MAXLINE];
     int is_reader = request_parse_uri(uri, &line_num, content);
 
-    if (is_reader == -1) {
+    if (is_reader == -1)
+    {
         request_error(fd, "path", "404", "Not Found", "server could not find the requested path");
         return;
     }
 
-    if (is_reader == 0) {
+    if (is_reader == 0)
+    {
         char filename[] = "./index.html";
         struct stat st;
         stat(filename, &st);
         request_serve_static(fd, filename, st.st_size);
-
-    } else if (is_reader==1) {
+    }
+    else if (is_reader == 1)
+    {
         // request_serve_reader(fd, line_num);
         sem_wait(&mutex1);
         r_count++;
-        if (r_count==1)
-            sem_wait(wrt+line_num-1);
+        if (r_count == 1)
+            sem_wait(wrt + line_num - 1);
         sem_post(&mutex1);
-        read_line_file(fd , line_num); 
+        read_line_file(fd, line_num);
         sem_wait(&mutex1);
         r_count--;
-        if (r_count==0)
+        if (r_count == 0)
         {
-            sem_post(wrt+line_num-1);
+            sem_post(wrt + line_num - 1);
         }
         sem_post(&mutex1);
-        
-    } else {
+    }
+    else
+    {
         // writer
-        sem_wait(wrt+line_num-1);
+        sem_wait(wrt + line_num - 1);
         edit_files(fd, line_num, content);
-        sem_post(wrt+line_num-1);
+        sem_post(wrt + line_num - 1);
     }
 }
