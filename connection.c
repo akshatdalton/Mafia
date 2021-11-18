@@ -249,43 +249,6 @@ void request_get_filetype(char *filename, char *filetype) {
         strcpy(filetype, "text/plain");
 }
 
-void request_serve_dynamic(int fd, char *filename, char *cgiargs) {
-    char buf[MAXLINE], *argv[] = {NULL};
-
-    // The server does only a little bit of the header.
-    // The CGI script has to finish writing out the header.
-    sprintf(buf,
-            ""
-            "HTTP/1.0 200 OK\r\n"
-            "Server: IIITH WebServer\r\n");
-
-    if (write(fd, buf, strlen(buf)) < 0) {
-        err_n_die("write error.");
-    }
-
-    pid_t pid = fork();
-    if (pid < 0) {
-        err_n_die("fork error.");
-    }
-
-    if (pid == 0) {                                    // child
-        if (setenv("QUERY_STRING", cgiargs, 1) < 0) {  // args to cgi go here
-            err_n_die("setenv error.");
-        }
-        if (dup2(fd, STDOUT_FILENO) < 0) {  // make cgi writes go to socket (not screen)
-            err_n_die("dup2 error.");
-        }
-        extern char **environ;  // defined by libc
-        if (execve(filename, argv, environ) < 0) {
-            err_n_die("execve error.");
-        }
-    } else {
-        if (wait(NULL) < 0) {
-            err_n_die("wait error.");
-        }
-    }
-}
-
 void request_serve_static(int fd, char *filename, int filesize) {
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXLINE];
@@ -491,9 +454,6 @@ void handle_request(int fd) {
         }
 
         char* filename = content;
-        if (strstr(filename, ".html") == NULL && strstr(filename, ".js") == NULL) {
-            return;
-        }
 
         struct stat st;
         if (stat(filename, &st) < 0) {
