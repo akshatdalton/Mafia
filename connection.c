@@ -4,6 +4,7 @@
 
 #include "connection.h"
 
+int r_count = 0;
 
 void err_n_die(const char *fmt, ...) {
     int errno_save;
@@ -114,7 +115,7 @@ void request_error(int fd, char *cause, char *errnum, char *shortmsg, char *long
             ""
             "<!doctype html>\r\n"
             "<head>\r\n"
-            "  <title>OSTEP WebServer Error</title>\r\n"
+            "  <title>IIITH WebServer Error</title>\r\n"
             "</head>\r\n"
             "<body>\r\n"
             "  <h2>%s: %s</h2>\r\n"
@@ -169,6 +170,11 @@ int request_parse_uri(char *uri, int *line_num, char *content) {
     char *ptr;
     int index = 0;
     char line[MAXLINE];
+
+    if (strlen(uri) == 1 && uri[0] == '/') {
+        // root
+        return 0;
+    }
 
     if (strstr(uri, "reader") != NULL) {
         // reader
@@ -346,7 +352,6 @@ void read_line_file(int fd , int line_number){
 
 void edit_files(int fd, int lno, char* newln)
 {
-    printf("I'm in writer\n");
     const char *filename = "data.txt";
     char temp[] = "temp.txt";
     char str[MAXLINE];
@@ -379,10 +384,14 @@ void edit_files(int fd, int lno, char* newln)
             ""
             "HTTP/1.0 200 OK\r\n"
             "Server: IIITH WebServer\r\n"
-            "Content-Length: 0\r\n"
-            "Content-Type: \r\n\r\n");
+            "Content-Length: %ld\r\n"
+            "Content-Type: \r\n\r\n",
+            strlen(newln));
         if (write(fd, header , strlen(header))< 0){
             err_n_die("write error"); 
+        }
+    if (write(fd, newln , strlen(newln))< 0){
+            err_n_die("write error") ; 
         }
     }else {
         err_n_die("Unable to read this line"); 
@@ -416,16 +425,37 @@ void handle_request(int fd) {
     char content[MAXLINE];
     int is_reader = request_parse_uri(uri, &line_num, content);
 
-    if (is_reader == -1 || line_num == -1) {
+    if (is_reader == -1) {
         request_error(fd, "path", "404", "Not Found", "server could not find the requested path");
         return;
     }
 
-    if (is_reader==1) {
+    if (is_reader == 0) {
+        char filename[] = "./index.html";
+        struct stat st;
+        stat(filename, &st);
+        request_serve_static(fd, filename, st.st_size);
+
+    } else if (is_reader==1) {
         // request_serve_reader(fd, line_num);
+        sem_wait(&mutex1);
+        r_count++;
+        if (r_count==1)
+            sem_wait(wrt+line_num-1);
+        sem_post(&mutex1);
         read_line_file(fd , line_num); 
+        sem_wait(&mutex1);
+        r_count--;
+        if (r_count==0)
+        {
+            sem_post(wrt+line_num-1);
+        }
+        sem_post(&mutex1);
+        
     } else {
         // writer
+        sem_wait(wrt+line_num-1);
         edit_files(fd, line_num, content);
+        sem_post(wrt+line_num-1);
     }
 }
