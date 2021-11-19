@@ -1,10 +1,17 @@
+var editor = CodeMirror.fromTextArea(document.getElementById("#docs"),{
+    lineNumbers: true,
+    mode:"python",
+    theme: "monokai"
+});
+
 $(document).ready(function () {
     function get_current_line_num() {
         const t = $("#docs")[0];
-        return t.value.substr(0, t.selectionStart).split("\n").length;
+        return editor.getCode().split("\n").length;
     }
 
     $("#docs").load("/docs_reader");
+    editor.setValue($('#docs').val);
 
     // $("textarea#docs").on("keyup keypress keydown change", function () {
     $('#docs').bind('input propertychange', function() {
@@ -25,7 +32,7 @@ $(document).ready(function () {
         const url = "/docs_writer?line_num=" + line_num + "&content=" + text_line;
         $.get(url, (data, status) => {
             if (status == "success") {
-                textarea.val(data);
+                editor.setValue(data);
             }
         });
     });
