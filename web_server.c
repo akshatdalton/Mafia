@@ -32,9 +32,7 @@ void *thread_function(void *arg){
 
 int main(int argc, char *argv[])
 {
-    for (int i=0;i<MAXSIZE;i++){
-        sem_init(wrt+i,0,1);
-    }
+    sem_init(&wrt,0,1);
     sem_init(&mutex1,0,1);
     int listen_fd, conn_fd;
 

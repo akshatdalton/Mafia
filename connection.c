@@ -448,6 +448,10 @@ void read_all(int fd)
     {
         err_n_die("mmap error.");
     }
+    if (close(srcfd) < 0)
+    {
+        err_n_die("close error.");
+    }
     sprintf(buf,
             ""
             "HTTP/1.0 200 OK\r\n"
@@ -523,21 +527,21 @@ void handle_request(int fd)
         sem_wait(&mutex1);
         r_count++;
         if (r_count == 1)
-            sem_wait(wrt + line_num - 1);
+            sem_wait(&wrt);
         sem_post(&mutex1);
         read_line_file(fd, line_num);
         sem_wait(&mutex1);
         r_count--;
         if (r_count == 0)
         {
-            sem_post(wrt + line_num - 1);
+            sem_post(&wrt);
         }
         sem_post(&mutex1);
 
     } else {
         // writer
-        sem_wait(wrt+line_num-1);
+        sem_wait(&wrt);
         edit_files(fd, line_num, content, uri);
-        sem_post(wrt+line_num-1);
+        sem_post(&wrt);
     }
 }

@@ -29,7 +29,7 @@
 #define MAXSIZE 50
 #define SA struct sockaddr
 
-sem_t wrt[MAXSIZE],mutex1;
+sem_t wrt,mutex1;
 
 void err_n_die(const char *fmt, ...);
 char *bin2hex(const unsigned char *input, size_t len);
