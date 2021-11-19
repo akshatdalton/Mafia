@@ -198,11 +198,11 @@ int request_parse_uri(char *uri, int *line_num, char *content)
     if (strlen(uri) == 1 && uri[0] == '/')
     {
         // root
+        strcat(content, "./index.html");
         return 0;
     }
 
-    if (strstr(uri, "reader") != NULL)
-    {
+    if (strstr(uri, "/reader") != NULL) {
         // reader
         if ((ptr = strstr(uri, "line_num")) == NULL)
         {
@@ -220,8 +220,7 @@ int request_parse_uri(char *uri, int *line_num, char *content)
         return 1;
     }
 
-    if (strstr(uri, "writer") != NULL)
-    {
+    if ((strstr(uri, "/writer") != NULL) || (strstr(uri, "/docs_writer") != NULL)) {
         // writer
         if ((ptr = strstr(uri, "line_num")) == NULL)
         {
@@ -259,6 +258,18 @@ int request_parse_uri(char *uri, int *line_num, char *content)
         return 2;
     }
 
+    if (strstr(uri, "docs_reader") != NULL) {
+        // call read_all
+        return 0;
+    }
+
+    if (strstr(uri, "?") == NULL) {
+        // That represents that we are not receiving any query.
+        strcat(content, ".");
+        strcat(content, uri);
+        return 0;
+    }
+
     return -1;
 }
 
@@ -273,55 +284,7 @@ void request_get_filetype(char *filename, char *filetype)
         strcpy(filetype, "text/plain");
 }
 
-void request_serve_dynamic(int fd, char *filename, char *cgiargs)
-{
-    char buf[MAXLINE], *argv[] = {NULL};
-
-    // The server does only a little bit of the header.
-    // The CGI script has to finish writing out the header.
-    sprintf(buf,
-            ""
-            "HTTP/1.0 200 OK\r\n"
-            "Server: IIITH WebServer\r\n");
-
-    if (write(fd, buf, strlen(buf)) < 0)
-    {
-        err_n_die("write error.");
-    }
-
-    pid_t pid = fork();
-    if (pid < 0)
-    {
-        err_n_die("fork error.");
-    }
-
-    if (pid == 0)
-    { // child
-        if (setenv("QUERY_STRING", cgiargs, 1) < 0)
-        { // args to cgi go here
-            err_n_die("setenv error.");
-        }
-        if (dup2(fd, STDOUT_FILENO) < 0)
-        { // make cgi writes go to socket (not screen)
-            err_n_die("dup2 error.");
-        }
-        extern char **environ; // defined by libc
-        if (execve(filename, argv, environ) < 0)
-        {
-            err_n_die("execve error.");
-        }
-    }
-    else
-    {
-        if (wait(NULL) < 0)
-        {
-            err_n_die("wait error.");
-        }
-    }
-}
-
-void request_serve_static(int fd, char *filename, int filesize)
-{
+void request_serve_static(int fd, char *filename, int filesize) {
     int srcfd;
     char *srcp, filetype[MAXLINE], buf[MAXLINE];
 
@@ -413,7 +376,7 @@ void read_line_file(int fd, int line_number)
     }
 }
 
-void edit_files(int fd, int lno, char *newln)
+void edit_files(int fd, int lno, char* newln, char* uri)
 {
     const char *filename = "data.txt";
     char temp[] = "temp.txt";
@@ -437,27 +400,25 @@ void edit_files(int fd, int lno, char *newln)
             else
             {
                 found = 1;
-                printf("Written!\n");
-                fprintf(fptr2, "%s", newln);
+                fprintf(fptr2,"%s",newln);
             }
         }
     }
-    if (found)
-    {
-        sprintf(header,
+    if(found){
+        if (strstr(uri, "docs_writer") == NULL) {
+            sprintf(header,
                 ""
                 "HTTP/1.0 200 OK\r\n"
                 "Server: IIITH WebServer\r\n"
                 "Content-Length: %ld\r\n"
                 "Content-Type: \r\n\r\n",
                 strlen(newln));
-        if (write(fd, header, strlen(header)) < 0)
-        {
-            err_n_die("write error");
-        }
-        if (write(fd, newln, strlen(newln)) < 0)
-        {
-            err_n_die("write error");
+            if (write(fd, header , strlen(header))< 0){
+                err_n_die("write error"); 
+            }
+            if (write(fd, newln , strlen(newln))< 0){
+                err_n_die("write error") ; 
+            }
         }
     }
     else
@@ -467,7 +428,10 @@ void edit_files(int fd, int lno, char *newln)
     fclose(fptr1);
     fclose(fptr2);
     remove(filename);
-    rename(temp, filename);
+    rename(temp,filename);
+    if (strstr(uri, "docs_writer") != NULL) {
+        read_all(fd);
+    }
 }
 
 void read_all(int fd)
@@ -538,15 +502,23 @@ void handle_request(int fd)
         return;
     }
 
-    if (is_reader == 0)
-    {
-        char filename[] = "./index.html";
+    if (is_reader == 0) {
+        // serve static files.
+        if (strstr(uri, "docs_reader") != NULL) {
+            read_all(fd);
+            return;
+        }
+
+        char* filename = content;
+
         struct stat st;
-        stat(filename, &st);
+        if (stat(filename, &st) < 0) {
+            // Just do a safe return from here.
+            return;
+        }
         request_serve_static(fd, filename, st.st_size);
-    }
-    else if (is_reader == 1)
-    {
+
+    } else if (is_reader == 1) {
         // request_serve_reader(fd, line_num);
         sem_wait(&mutex1);
         r_count++;
@@ -561,12 +533,11 @@ void handle_request(int fd)
             sem_post(wrt + line_num - 1);
         }
         sem_post(&mutex1);
-    }
-    else
-    {
+
+    } else {
         // writer
-        sem_wait(wrt + line_num - 1);
-        edit_files(fd, line_num, content);
-        sem_post(wrt + line_num - 1);
+        sem_wait(wrt+line_num-1);
+        edit_files(fd, line_num, content, uri);
+        sem_post(wrt+line_num-1);
     }
 }

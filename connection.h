@@ -36,5 +36,6 @@ char *bin2hex(const unsigned char *input, size_t len);
 int open_server_connection();
 void handle_request(int fd);
 void *thread_function(void *arg);
+void read_all(int fd);
 
 #endif
