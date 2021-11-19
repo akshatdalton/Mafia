@@ -262,11 +262,13 @@ int request_parse_uri(char *uri, int *line_num, char *content)
         // call read_all
         return 0;
     }
-
+    
     if (strstr(uri, "?") == NULL) {
         // That represents that we are not receiving any query.
+        content[0] = '\0';
         strcat(content, ".");
         strcat(content, uri);
+        
         return 0;
     }
 
@@ -499,20 +501,18 @@ void handle_request(int fd)
     int line_num = -1;
     char content[MAXLINE];
     int is_reader = request_parse_uri(uri, &line_num, content);
-
     if (is_reader == -1)
     {
         request_error(fd, "path", "404", "Not Found", "server could not find the requested path");
         return;
     }
-
     if (is_reader == 0) {
         // serve static files.
+
         if (strstr(uri, "docs_reader") != NULL) {
             read_all(fd);
             return;
         }
-
         char* filename = content;
 
         struct stat st;
