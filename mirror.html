@@ -32,18 +32,21 @@
     <title>IIITH Docs</title>
 </head>
 <body>
-    <div class="docs" style="float: left; padding-left: 20px;">
+    <div class="docs" style="width: 48%; float: left; padding-left: 10px;">
         <h1>Docs</h1>
-        <textarea id="docs" rows="10", cols="50">
+        <textarea id="docs" >
         </textarea>
     </div>
-    <div class="Output zone" style="float: right; padding-right: 20px;"></div>
+    <div class="Output zone" style="width: 50%;float: right;">
     <h1>Output</h1>
     <button onclick="compileHTML()">Run</button> 
-    <div id = "output"></div>
+    <br>
+    <!-- <div id = "output"></div> -->
+    <iframe src="/final.html" id="frame" style="width: 100%; height: 750px;"></iframe>
     <script>
         function compileHTML(field,e){
-            document.getElementById('output').innerHTML = editor.getValue();
+            document.getElementById('frame').contentWindow.document.getElementById('output').innerHTML =editor.getValue() ; 
+            // document.getElementById('output').innerHTML = editor.getValue();
         }
         var editor = CodeMirror.fromTextArea(document.getElementById("docs"),{
             lineNumbers: true,
@@ -51,7 +54,7 @@
             theme: "monokai",
             extraKeys: {"Ctrl-Space": "autocomplete"}
         });
-        editor.setSize(800, 800);
+        editor.setSize(null, 800);
 
         var orig = CodeMirror.hint.HTML;
         CodeMirror.hint.HTML = function(cm) {
@@ -67,13 +70,13 @@
                 // return t.value.substr(0, t.selectionStart).split("\n").length;
                 return editor.getCursor().line+1;
             }
-
+            
             $("#docs").load("/docs_reader",function(){
             editor.setValue(decodeURI($("#docs")[0].value));
             // console.log("Editor code:",editor.getValue());
             });
             CodeMirror.commands.autocomplete = function(cm) {
-                CodeMirror.showHint(cm, CodeMirror.hint.python); // Error Here
+                CodeMirror.showHint(cm, CodeMirror.hint.html); // Error Here
             }
             // editor.on("keyup",compileHTML);
             // $("textarea#docs").on("keyup keypress keydown change", function () {
@@ -96,11 +99,13 @@
                 $.get(url, (data, status) => {
                     if (status == "success") {
                         textarea.val(decodeURI(data));
+                        
                         editor.setValue(decodeURI(data));
                     }
                 });
             });
         });
     </script>
+    </div>
 </body>
 </html>
