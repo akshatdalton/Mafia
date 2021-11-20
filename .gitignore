@@ -6,6 +6,7 @@
 *.ko
 *.obj
 *.elf
+writer
 
 # Linker output
 *.ilk
@@ -54,3 +55,5 @@ dkms.conf
 # Executables
 web_server
 web_client
+
+data.txt

@@ -9,6 +9,7 @@ pthread_t thread_pool[THREAD_POOL_SIZE];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
 pthread_cond_t condition_v = PTHREAD_COND_INITIALIZER;  
 
+
 //handle multiple threads
 void *thread_function(void *arg){
     while (1){
@@ -31,6 +32,8 @@ void *thread_function(void *arg){
 
 int main(int argc, char *argv[])
 {
+    sem_init(&wrt,0,1);
+    sem_init(&mutex1,0,1);
     int listen_fd, conn_fd;
 
     if ((listen_fd = open_server_connection()) < 0)
