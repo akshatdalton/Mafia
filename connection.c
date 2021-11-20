@@ -544,4 +544,5 @@ void handle_request(int fd)
         edit_files(fd, line_num, content, uri);
         sem_post(&wrt);
     }
+    sleep(1);
 }
