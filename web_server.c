@@ -26,6 +26,7 @@ void *thread_function(void *arg){
             
             handle_request(conn_fd);
             close(conn_fd);
+            printf("Closed the connection.\n");
         }
     }
 }

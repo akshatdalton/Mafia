@@ -32,8 +32,9 @@
 sem_t wrt,mutex1;
 
 void err_n_die(const char *fmt, ...);
-char *bin2hex(const unsigned char *input, size_t len);
+ssize_t readline(int fd, void *buf, size_t maxlen);
 int open_server_connection();
+int open_client_connection(char *hostname, int port);
 void handle_request(int fd);
 void *thread_function(void *arg);
 void read_all(int fd);
