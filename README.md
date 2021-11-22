@@ -1,11 +1,12 @@
 # OS-WebServer
 A simple multi-threaded webserver to illustrate the use of process scheduling and synchronisation and other OS concepts.
 
-# How to Run?
+# Instructions to Run
 
-- Run `make`.
-- Run server: `./web_server.c`
-- The server will be exposed to the port: `18000`.
+1. Clone the repo.
+2. Run the `make` command.
+3. If you got no compilation errors then you can run `./web_server`.
+4. Go to `localhost:18000/index.html` to view the results.
   
 # Exposed APIs:
 
@@ -14,12 +15,6 @@ A simple multi-threaded webserver to illustrate the use of process scheduling an
 - `/writer?line_num={line_num}&content={content}` for writer to edit the line number: `lin_num` by `content`.
 - `/docs_writer?line_num={line_num}&content={content}` same as above.
 - `/docs_reader` read all the content of the `data.txt` file.
-
-# Instructions to Run
-1. Clone the repo.
-2. Run the `make` command.
-3. If you got no compilation errors then you can run `./web_server`.
-4. Go to `localhost:18000/index.html` to view the results.
 
 # Changes to make while editing the codebase
 1. Add the new file in `Makefile`, if any.
