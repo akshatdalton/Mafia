@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #define SERVER_PORT 18000
 

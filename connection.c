@@ -530,6 +530,7 @@ void handle_request(int fd)
             sem_wait(&wrt);
         sem_post(&mutex1);
         read_line_file(fd, line_num);
+        // sleep(1); // this is for testing 
         sem_wait(&mutex1);
         r_count--;
         if (r_count == 0)
@@ -542,7 +543,8 @@ void handle_request(int fd)
         // writer
         sem_wait(&wrt);
         edit_files(fd, line_num, content, uri);
+        // sleep(1) ; // this is for testing 
         sem_post(&wrt);
     }
-    // sleep(1);
+    
 }

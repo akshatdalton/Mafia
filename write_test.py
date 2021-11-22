@@ -13,6 +13,7 @@ def write_request(text):
 
 def main():
     texts = ["hello" , "my name" , "is tanmay" , "khabia" , "this is " , "my test bench"]
+    print("Number of write requests", len(texts))
     st  = time.perf_counter()
     with ThreadPoolExecutor() as ex:
         time_list = ex.map(write_request , texts)
