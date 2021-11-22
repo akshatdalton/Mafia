@@ -1,11 +1,21 @@
 # OS-WebServer
-A simple multi-threaded webserver to illustrate the use of process scheduling and synchronisation and other OS concepts.
+
+A multithreaded online IDE for pair-programming built using Operating Systems concepts. 
 
 # Instructions to Run
+
 1. Clone the repo.
 2. Run the `make` command.
 3. If you got no compilation errors then you can run `./web_server`.
 4. Go to `localhost:18000/index.html` to view the results.
+  
+# Exposed APIs:
+
+- `http://localhost:18000/` to view Reader-Writer.
+- `/reader?line_num={line_num}` api for reader to read line number: `line_num`.
+- `/writer?line_num={line_num}&content={content}` for writer to edit the line number: `line_num` by `content`.
+- `/docs_writer?line_num={line_num}&content={content}` same as above.
+- `/docs_reader` read all the content of the `data.txt` file.
 
 # Changes to make while editing the codebase
 1. Add the new file in `Makefile`, if any.
@@ -14,3 +24,22 @@ A simple multi-threaded webserver to illustrate the use of process scheduling an
 4. Use meaningful variable names.
 5. Before pushing the code make sure your are on the upstream and avoid doing force push unless necessary.
 6. Add executable files (like `web_server`) in `.gitignore`.
+
+# Demo
+
+1. UI
+![UI](./demo/overall_UI.png)
+
+2. Autocomplete feature ans syntax highlighter
+![Ac](./demo/autocomplete.png)
+
+3. HTML execution output
+![op](./demo/output.png)
+
+
+## Contributors
+- [Akshat](https://github.com/akshatdalton)
+- [Tanmay Khabia](https://github.com/tkhabia)
+- [Dipanwita Guhathakurta](https://github.com/susiejojo)
+
+Made with ❤️️ as part of the course Algorithms and Operating Systems, Monsoon '21.
