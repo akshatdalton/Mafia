@@ -57,3 +57,5 @@ web_server
 web_client
 
 data.txt
+
+__pycache__/
