@@ -2,7 +2,7 @@
 
 llist *head = NULL, *tail = NULL;
 // add node in linked list
-void insert(int *socket)
+void enqueue(int *socket)
 {
     llist *node = malloc(sizeof(llist));
     node->data = socket;
@@ -19,7 +19,7 @@ void insert(int *socket)
 }
 
 // remove node form a linked list
-int *remove()
+int *dequeue()
 {
     if (!head)
     {

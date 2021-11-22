@@ -7,6 +7,6 @@ typedef struct llist
     int* data  ; 
 }llist;
 
-void insert(int *socket ); 
-int* remove(); 
+void enqueue(int *socket ); 
+int* dequeue(); 
 #endif
