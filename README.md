@@ -1,4 +1,4 @@
-# OS-WebServer
+# HTMLFiddle
 
 A multithreaded online IDE for pair-programming built using Operating Systems concepts. 
 
@@ -12,8 +12,9 @@ A multithreaded online IDE for pair-programming built using Operating Systems co
 
 ## Testing using ngrok:
 
-1. Run `./ngrok/ngrok/ http 18000`.
+1. Run `./ngrok/ngrok http 18000`.
 2. Using the link obtained, head over to `<link>/mirror.html` to view the IDE.
+3. Enable autocompletion using `Ctrl+Space`.
 
 ## Run unit tests:
 
