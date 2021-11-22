@@ -2,7 +2,7 @@ import time
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# In we_client.c, change the THREAD_POOL_SIZE to 1 to test single vs multi.
+# In web_client.c, change the THREAD_POOL_SIZE to 1 to test single vs multi.
 
 
 def make_request():
