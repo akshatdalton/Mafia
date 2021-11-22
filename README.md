@@ -4,11 +4,24 @@ A multithreaded online IDE for pair-programming built using Operating Systems co
 
 # Instructions to Run
 
+## Running the server:
+
 1. Clone the repo.
 2. Run the `make` command.
 3. If you got no compilation errors then you can run `./web_server`.
-4. Go to `localhost:18000/index.html` to view the results.
-  
+
+## Testing using ngrok:
+
+1. Run `./ngrok/ngrok/ http 18000`.
+2. Using the link obtained, head over to `<link>/mirror.html` to view the IDE.
+
+## Run unit tests:
+
+1. Run `python test_single_vs_multi.py` for comparison between single-threaded and multi-threaded server.
+2. Run `python test_multiple_reader.py` for simulating many readers.
+3. Run 'python write_test.py` for simulating many writers.
+4. Run `python read_write_test.py` for simulating cycles of readers and writers.
+
 # Exposed APIs:
 
 - `http://localhost:18000/` to view Reader-Writer.
@@ -18,6 +31,7 @@ A multithreaded online IDE for pair-programming built using Operating Systems co
 - `/docs_reader` read all the content of the `data.txt` file.
 
 # Changes to make while editing the codebase
+
 1. Add the new file in `Makefile`, if any.
 2. Keep standard libraries in `*.h` header files.
 3. Use similar code format throughout the whole codebase (Use VS Code standard format support: `Ctrl + Shift + I`).
